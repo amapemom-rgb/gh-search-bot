@@ -62,6 +62,41 @@ def search_huggingface(query: str, task: str = "") -> str:
     results = [{"id": m.get("id"), "downloads": m.get("downloads", 0), "likes": m.get("likes", 0), "task": m.get("pipeline_tag", ""), "url": f"https://huggingface.co/{m.get('id')}"}  for m in models[:8]]
     return json.dumps(results, ensure_ascii=False)
 
+
+@tool
+def search_npm(query: str) -> str:
+    "Search npm packages (Node.js/JavaScript libraries)."
+    with httpx.Client(timeout=10) as client:
+        r = client.get("https://registry.npmjs.org/-/v1/search", params={"text": query, "size": 8})
+        data = r.json()
+    if "objects" not in data:
+        return "Nothing found on npm."
+    results = [{"name": p["package"]["name"], "description": p["package"].get("description",""), "version": p["package"]["version"], "url": f"https://www.npmjs.com/package/{p['package']['name']}", "weekly_downloads": p.get("downloads",{}).get("weekly",0)} for p in data["objects"][:8]]
+    return json.dumps(results, ensure_ascii=False)
+
+@tool
+def search_pypi(query: str) -> str:
+    "Search Python packages on PyPI."
+    with httpx.Client(timeout=10) as client:
+        r = client.get("https://pypi.org/search/", params={"q": query}, headers={"Accept": "application/json"})
+        data = r.json()
+    if not data.get("results"):
+        return "Nothing found on PyPI."
+    results = [{"name": p["name"], "description": p.get("description",""), "version": p.get("version",""), "url": f"https://pypi.org/project/{p['name']}"} for p in data["results"][:8]]
+    return json.dumps(results, ensure_ascii=False)
+
+@tool
+def search_awesome(query: str) -> str:
+    "Search awesome-lists on GitHub (curated lists of tools and libraries)."
+    headers = {"Authorization": f"token {GITHUB_TOKEN}", "Accept": "application/vnd.github.v3+json"}
+    params = {"q": f"awesome {query} in:name,description", "sort": "stars", "order": "desc", "per_page": 8}
+    with httpx.Client(timeout=10) as client:
+        data = client.get("https://api.github.com/search/repositories", headers=headers, params=params).json()
+    if "items" not in data:
+        return f"Error: {data.get('message', 'unknown')}"
+    results = [{"name": r["full_name"], "stars": r["stargazers_count"], "description": r.get("description",""), "url": r["html_url"]} for r in data["items"][:8]]
+    return json.dumps(results, ensure_ascii=False)
+
 SOUL = open(BASE_DIR / "SOUL.md").read()
 SKILL = open(BASE_DIR / "SKILL.md").read()
 SYSTEM_PROMPT = SOUL + "\n\n" + SKILL + "\n\nTy pomogaesh najti open-source proekty na GitHub."
@@ -69,7 +104,7 @@ SYSTEM_PROMPT = SOUL + "\n\n" + SKILL + "\n\nTy pomogaesh najti open-source proe
 conn = sqlite3.connect(BASE_DIR / "memory.db", check_same_thread=False)
 memory = SqliteSaver(conn)
 
-agent = create_react_agent(llm, [search_github, get_repo_details, search_huggingface], prompt=SYSTEM_PROMPT, checkpointer=memory)
+agent = create_react_agent(llm, [search_github, get_repo_details, search_huggingface, search_npm, search_pypi, search_awesome], prompt=SYSTEM_PROMPT, checkpointer=memory)
 
 async def run_agent(user_message: str, thread_id: str) -> str:
     config = {"configurable": {"thread_id": thread_id}}
