@@ -2,6 +2,8 @@
 
 AI agent that helps find the right open-source project on GitHub and HuggingFace through a natural language conversation.
 
+[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/new/template?template=https://github.com/amapemom-rgb/gh-search-bot)
+
 ## What it does
 
 - Searches GitHub repositories by task description (not exact name)
@@ -10,25 +12,27 @@ AI agent that helps find the right open-source project on GitHub and HuggingFace
 - Asks clarifying questions to narrow the search
 - Remembers conversation context (SQLite, persists across restarts)
 
-## Stack
+## Deploy options
 
-- Python 3.10+
-- [aiogram 3](https://docs.aiogram.dev/) — Telegram Bot API
-- [LangGraph](https://langchain-ai.github.io/langgraph/) — ReAct agent with memory
-- [OpenRouter](https://openrouter.ai/) / OpenAI / Anthropic — LLM provider (configurable)
-- GitHub API + HuggingFace API — data sources
-- SQLite — persistent conversation memory
+### Option A — One click (Railway)
 
-## Installation
+1. Click the "Deploy on Railway" button above
+2. Sign in with GitHub
+3. Fill in your tokens in the form (Telegram, LLM API key, GitHub)
+4. Click Deploy — bot starts in the cloud, no local setup needed
 
-### 1. Clone the repository
+Free tier: $5/month credit (enough for a light bot).
+
+### Option B — Run locally
+
+#### 1. Clone the repository
 
 ```bash
 git clone https://github.com/amapemom-rgb/gh-search-bot.git
 cd gh-search-bot
 ```
 
-### 2. Create virtual environment
+#### 2. Create virtual environment
 
 ```bash
 # macOS / Linux
@@ -40,13 +44,13 @@ python -m venv venv
 venv\Scripts\activate
 ```
 
-### 3. Install dependencies
+#### 3. Install dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 4. Run setup wizard
+#### 4. Run setup wizard
 
 ```bash
 python setup.py
@@ -54,17 +58,26 @@ python setup.py
 
 The wizard will ask for:
 - Telegram bot token (get one from [@BotFather](https://t.me/BotFather))
-- LLM provider choice: OpenRouter, OpenAI, Anthropic, or custom
+- LLM provider: OpenRouter, OpenAI, Anthropic, Gemini, Grok, DeepSeek, Qwen, or custom
 - API key for chosen provider
 - GitHub Personal Access Token ([github.com/settings/tokens](https://github.com/settings/tokens), scope: `public_repo`)
 
-It will create a `.env` file automatically.
-
-### 5. Run the bot
+#### 5. Run the bot
 
 ```bash
 python bot.py
 ```
+
+> Note: when running locally the bot works only while your computer is on and the terminal is open.
+
+## Stack
+
+- Python 3.10+
+- [aiogram 3](https://docs.aiogram.dev/) — Telegram Bot API
+- [LangGraph](https://langchain-ai.github.io/langgraph/) — ReAct agent with memory
+- OpenRouter / OpenAI / Anthropic / Gemini / Grok / DeepSeek / Qwen — LLM provider (configurable)
+- GitHub API + HuggingFace API — data sources
+- SQLite — persistent conversation memory
 
 ## Bot commands
 
@@ -76,12 +89,13 @@ python bot.py
 ## Architecture
 
 ```
-bot.py      — Telegram interface (aiogram)
-agent.py    — LangGraph ReAct agent + search tools
-setup.py    — First-time configuration wizard
-SOUL.md     — Agent personality and behavior rules
-SKILL.md    — Search instructions and response format
-memory.db   — SQLite memory (created automatically)
+bot.py        — Telegram interface (aiogram)
+agent.py      — LangGraph ReAct agent + search tools
+setup.py      — First-time configuration wizard
+railway.json  — Railway deployment config
+SOUL.md       — Agent personality and behavior rules
+SKILL.md      — Search instructions and response format
+memory.db     — SQLite memory (created automatically)
 ```
 
 ## License
