@@ -1,80 +1,89 @@
-# GH-найди -- Telegram-bot dlja poiska open-source instrumentov
+# GH-найди — Telegram bot for finding open-source tools
 
-AI-agent kotoryj pomogaet najti open-source proekt na GitHub i HuggingFace cherez dialog na estestvennom jazyke.
+AI agent that helps find the right open-source project on GitHub and HuggingFace through a natural language conversation.
 
-## Chto umeet
+## What it does
 
-- Ishchet repozitorii na GitHub po opisaniju zadachi
-- Filtruet po jazyku, zvjozdam, aktivnosti
-- Ishchet AI-modeli i datasety na HuggingFace
-- Vedjot dialog: zadajoet utochnjajushchie voprosy
-- Zapominaet kontekst razgovora (SQLite, sobljudaetsja mezhdu perezapuskami)
+- Searches GitHub repositories by task description (not exact name)
+- Filters by language, stars, activity
+- Searches AI models and datasets on HuggingFace
+- Asks clarifying questions to narrow the search
+- Remembers conversation context (SQLite, persists across restarts)
 
-## Stek
+## Stack
 
 - Python 3.10+
-- aiogram 3 -- Telegram Bot API
-- LangGraph -- ReAct-agent s pamjatju
-- OpenRouter -- LLM provajder (model: qwen/qwen3.7-max)
-- GitHub API + HuggingFace API
-- SQLite -- persistentnaja pamjat dialogov
+- [aiogram 3](https://docs.aiogram.dev/) — Telegram Bot API
+- [LangGraph](https://langchain-ai.github.io/langgraph/) — ReAct agent with memory
+- [OpenRouter](https://openrouter.ai/) / OpenAI / Anthropic — LLM provider (configurable)
+- GitHub API + HuggingFace API — data sources
+- SQLite — persistent conversation memory
 
-## Ustanovka
+## Installation
 
-### 1. Klonirovat repozitorij
+### 1. Clone the repository
 
 ```bash
 git clone https://github.com/amapemom-rgb/gh-search-bot.git
 cd gh-search-bot
 ```
 
-### 2. Virtualnoye okruzhenie
+### 2. Create virtual environment
 
 ```bash
+# macOS / Linux
 python3 -m venv venv
 source venv/bin/activate
+
+# Windows
+python -m venv venv
+venv\Scripts\activate
 ```
 
-### 3. Zavisimosti
+### 3. Install dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 4. Nastroit .env
+### 4. Run setup wizard
 
 ```bash
-cp .env.example .env
+python setup.py
 ```
 
-Nuzhnyje tokeny:
-- `TELEGRAM_TOKEN` -- poluchit u @BotFather
-- `OPENROUTER_API_KEY` -- poluchit na openrouter.ai
-- `GITHUB_TOKEN` -- poluchit na github.com/settings/tokens (scope: public_repo)
+The wizard will ask for:
+- Telegram bot token (get one from [@BotFather](https://t.me/BotFather))
+- LLM provider choice: OpenRouter, OpenAI, Anthropic, or custom
+- API key for chosen provider
+- GitHub Personal Access Token ([github.com/settings/tokens](https://github.com/settings/tokens), scope: `public_repo`)
 
-### 5. Zapustit
+It will create a `.env` file automatically.
+
+### 5. Run the bot
 
 ```bash
 python bot.py
 ```
 
-## Komandy bota
+## Bot commands
 
-| Komanda | Opisanie |
-|---------|----------|
-| `/start` | Nachat dialog |
-| `/reset` | Sbrosit kontekst |
+| Command | Description |
+|---------|-------------|
+| `/start` | Start conversation |
+| `/reset` | Clear context and start over |
 
-## Arhitektura
+## Architecture
 
 ```
-bot.py     -- Telegram-interfejs (aiogram)
-agent.py   -- LangGraph ReAct-agent + instrumenty poiska
-SOUL.md    -- Lichnost i pravila povedenija agenta
-SKILL.md   -- Instrukcii po poisku
-memory.db  -- SQLite baza pamjati (sozdajotsja avtomaticheski)
+bot.py      — Telegram interface (aiogram)
+agent.py    — LangGraph ReAct agent + search tools
+setup.py    — First-time configuration wizard
+SOUL.md     — Agent personality and behavior rules
+SKILL.md    — Search instructions and response format
+memory.db   — SQLite memory (created automatically)
 ```
 
-## Licenzija
+## License
 
 MIT
