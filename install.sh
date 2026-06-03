@@ -34,4 +34,4 @@ fi
 echo ""
 echo "Running setup wizard..."
 echo ""
-python3 setup.py
+exec python3 setup.py < /dev/tty
