@@ -2,7 +2,6 @@
 
 AI agent that helps find the right open-source project on GitHub and HuggingFace through a natural language conversation.
 
-[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/new/template?template=https://github.com/amapemom-rgb/gh-search-bot)
 
 ## What it does
 
@@ -16,7 +15,6 @@ AI agent that helps find the right open-source project on GitHub and HuggingFace
 
 ### Option A — One click (Railway)
 
-1. Click the "Deploy on Railway" button above
 2. Sign in with GitHub
 3. Fill in your tokens in the form (Telegram, LLM API key, GitHub)
 4. Click Deploy — bot starts in the cloud, no local setup needed
