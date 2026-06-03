@@ -2,6 +2,7 @@
 # Licensed under MIT License
 
 import os, httpx, json, sqlite3
+from pathlib import Path
 from langchain_openai import ChatOpenAI
 from langchain_core.tools import tool
 from langchain_core.messages import HumanMessage
@@ -12,10 +13,12 @@ from dotenv import load_dotenv
 load_dotenv()
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 
+BASE_DIR = Path(__file__).parent
+
 llm = ChatOpenAI(
-    model="qwen/qwen3.7-max",
+    model=os.getenv("LLM_MODEL", "qwen/qwen3.7-max"),
     openai_api_key=os.getenv("OPENROUTER_API_KEY"),
-    openai_api_base="https://openrouter.ai/api/v1",
+    openai_api_base=os.getenv("LLM_BASE_URL", "https://openrouter.ai/api/v1"),
     temperature=0.5,
     max_tokens=4000,
 )
@@ -59,11 +62,11 @@ def search_huggingface(query: str, task: str = "") -> str:
     results = [{"id": m.get("id"), "downloads": m.get("downloads", 0), "likes": m.get("likes", 0), "task": m.get("pipeline_tag", ""), "url": f"https://huggingface.co/{m.get('id')}"}  for m in models[:8]]
     return json.dumps(results, ensure_ascii=False)
 
-SOUL = open("/opt/github-search/SOUL.md").read()
-SKILL = open("/opt/github-search/SKILL.md").read()
+SOUL = open(BASE_DIR / "SOUL.md").read()
+SKILL = open(BASE_DIR / "SKILL.md").read()
 SYSTEM_PROMPT = SOUL + "\n\n" + SKILL + "\n\nTy pomogaesh najti open-source proekty na GitHub."
 
-conn = sqlite3.connect("/opt/github-search/memory.db", check_same_thread=False)
+conn = sqlite3.connect(BASE_DIR / "memory.db", check_same_thread=False)
 memory = SqliteSaver(conn)
 
 agent = create_react_agent(llm, [search_github, get_repo_details, search_huggingface], prompt=SYSTEM_PROMPT, checkpointer=memory)
