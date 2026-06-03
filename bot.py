@@ -1,3 +1,6 @@
+# (c) 2026 amapemom-rgb — https://github.com/amapemom-rgb/gh-search-bot
+# Licensed under MIT License
+
 import asyncio, logging, os, uuid
 from aiogram import Bot, Dispatcher
 from aiogram.filters import CommandStart, Command
