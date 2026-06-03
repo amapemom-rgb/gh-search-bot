@@ -1,3 +1,6 @@
+# (c) 2026 amapemom-rgb — https://github.com/amapemom-rgb/gh-search-bot
+# Licensed under MIT License
+
 import os, httpx, json, sqlite3
 from langchain_openai import ChatOpenAI
 from langchain_core.tools import tool
