@@ -4,3 +4,4 @@ langgraph
 langchain-core
 httpx
 python-dotenv
+langgraph-checkpoint-sqlite
