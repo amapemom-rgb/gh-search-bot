@@ -7,7 +7,7 @@ logger = logging.getLogger("gh-agent")
 from pathlib import Path
 from langchain_openai import ChatOpenAI
 from langchain_core.tools import tool
-from langchain_core.messages import HumanMessage
+from langchain_core.messages import HumanMessage, RemoveMessage
 from langgraph.prebuilt import create_react_agent
 from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
 from dotenv import load_dotenv
@@ -119,13 +119,25 @@ async def get_agent():
         _agent = create_react_agent(llm, [search_github, get_repo_details, search_huggingface, search_npm, search_pypi, search_awesome], prompt=SYSTEM_PROMPT, checkpointer=memory)
     return _agent
 
+# Максимум сообщений в контексте (3 обмена = 6 сообщений).
+# При длинных ответах бота каждое сообщение может быть 5000+ токенов,
+# поэтому держим окно маленьким чтобы не выйти за лимит модели (1M токенов).
+MAX_HISTORY = 6
+
 async def run_agent(user_message: str, thread_id: str) -> str:
     agent = await get_agent()
     config = {"configurable": {"thread_id": thread_id}}
+
+    # Обрезаем старые сообщения через RemoveMessage (правильный способ в LangGraph).
+    # Старый подход aupdate_state(messages=slice) не удалял сообщения — только дублировал.
     state = await agent.aget_state(config)
     if state and state.values.get("messages"):
         msgs = state.values["messages"]
-        if len(msgs) > 20:
-            await agent.aupdate_state(config, {"messages": msgs[-20:]})
+        if len(msgs) > MAX_HISTORY:
+            to_remove = msgs[:-MAX_HISTORY]
+            removals = [RemoveMessage(id=m.id) for m in to_remove]
+            await agent.aupdate_state(config, {"messages": removals})
+            logger.info(f"[TRIM] thread={thread_id}: removed {len(to_remove)} old messages, kept {MAX_HISTORY}")
+
     result = await agent.ainvoke({"messages": [HumanMessage(content=user_message)]}, config=config)
     return result["messages"][-1].content
