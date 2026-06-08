@@ -1,7 +1,7 @@
 # (c) 2026 amapemom-rgb — https://github.com/amapemom-rgb/gh-search-bot
 # Licensed under MIT License
 
-import os, httpx, json, aiosqlite, logging
+import os, httpx, json, aiosqlite, logging, base64
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s")
 logger = logging.getLogger("gh-agent")
 from pathlib import Path
@@ -53,6 +53,34 @@ def get_repo_details(repo_full_name: str) -> str:
     return json.dumps({"name": repo.get("full_name"), "stars": repo.get("stargazers_count"), "forks": repo.get("forks_count"), "description": repo.get("description"), "topics": repo.get("topics",[]), "license": repo.get("license",{}).get("spdx_id") if repo.get("license") else "none", "last_commit": last, "open_issues": repo.get("open_issues_count"), "archived": repo.get("archived",False), "url": repo.get("html_url")}, ensure_ascii=False)
 
 @tool
+def get_repo_file_content(repo_full_name: str, path: str) -> str:
+    """Downloads and returns the content of a specific file from a GitHub repository.
+    Use this to read README.md, config files (e.g., glider.conf, docker-compose.yml),
+    or example scripts (e.g., in examples/ or demo.py).
+
+    Parameters:
+    - repo_full_name: Repository name in format 'owner/repo' (e.g., 'nadoo/glider')
+    - path: Path to the file within the repository (e.g., 'README.md' or 'glider.conf.example')
+    """
+    logger.info(f"[TOOL] get_repo_file_content: {repo_full_name}/{path}")
+    headers = {"Authorization": f"token {GITHUB_TOKEN}", "Accept": "application/vnd.github.v3+json"}
+    url = f"https://api.github.com/repos/{repo_full_name}/contents/{path}"
+    try:
+        with httpx.Client(timeout=10) as client:
+            response = client.get(url, headers=headers)
+        if response.status_code == 200:
+            data = response.json()
+            if "content" in data:
+                file_content = base64.b64decode(data["content"]).decode("utf-8", errors="ignore")
+                if len(file_content) > 6000:
+                    return file_content[:6000] + "\n\n... [Content truncated due to length] ..."
+                return file_content
+            return f"Error: Content field not found in API response for path: {path}"
+        return f"Error: Failed to fetch file. Status code: {response.status_code}."
+    except Exception as e:
+        return f"Error occurred while fetching file: {str(e)}"
+
+@tool
 def search_huggingface(query: str, task: str = "") -> str:
     "Search AI models and datasets on HuggingFace."
     logger.info(f"[TOOL] search_huggingface: {query} task={task}")
@@ -66,7 +94,6 @@ def search_huggingface(query: str, task: str = "") -> str:
         return "Nothing found on HuggingFace."
     results = [{"id": m.get("id"), "downloads": m.get("downloads", 0), "likes": m.get("likes", 0), "task": m.get("pipeline_tag", ""), "url": f"https://huggingface.co/{m.get('id')}"}  for m in models[:8]]
     return json.dumps(results, ensure_ascii=False)
-
 
 @tool
 def search_npm(query: str) -> str:
@@ -116,7 +143,7 @@ async def get_agent():
     if _agent is None:
         conn = await aiosqlite.connect(str(BASE_DIR / "memory.db"))
         memory = AsyncSqliteSaver(conn)
-        _agent = create_react_agent(llm, [search_github, get_repo_details, search_huggingface, search_npm, search_pypi, search_awesome], prompt=SYSTEM_PROMPT, checkpointer=memory)
+        _agent = create_react_agent(llm, [search_github, get_repo_details, get_repo_file_content, search_huggingface, search_npm, search_pypi, search_awesome], prompt=SYSTEM_PROMPT, checkpointer=memory)
     return _agent
 
 # Максимум сообщений в контексте (3 обмена = 6 сообщений).
