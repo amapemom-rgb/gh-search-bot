@@ -8,6 +8,10 @@ AI agent that helps find the right open-source project on GitHub and HuggingFace
 - Searches GitHub repositories by task description (not exact name)
 - Filters by language, stars, activity
 - Searches AI models and datasets on HuggingFace
+- Searches npm packages (Node.js/JavaScript)
+- Searches Python packages on PyPI
+- Searches awesome-lists for curated tool collections
+- **Reads files from repositories** — README, configs, examples (e.g., `glider.conf`, `docker-compose.yml`)
 - Asks clarifying questions to narrow the search
 - Remembers conversation context (SQLite, persists across restarts)
 
@@ -74,8 +78,20 @@ python bot.py
 - [aiogram 3](https://docs.aiogram.dev/) — Telegram Bot API
 - [LangGraph](https://langchain-ai.github.io/langgraph/) — ReAct agent with memory
 - OpenRouter / OpenAI / Anthropic / Gemini / Grok / DeepSeek / Qwen — LLM provider (configurable)
-- GitHub API + HuggingFace API — data sources
+- GitHub API + HuggingFace API + npm + PyPI — data sources
 - SQLite — persistent conversation memory
+
+## Agent tools
+
+| Tool | Description |
+|------|-------------|
+| `search_github` | Search repositories by query, language, stars |
+| `get_repo_details` | Get stars, license, last commit for a specific repo |
+| `get_repo_file_content` | Read a file from a repo (README, config, examples) |
+| `search_huggingface` | Search AI models and datasets |
+| `search_npm` | Search Node.js packages on npm |
+| `search_pypi` | Search Python packages on PyPI |
+| `search_awesome` | Search awesome-lists on GitHub |
 
 ## Bot commands
 
